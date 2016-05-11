@@ -12,5 +12,5 @@ typedef void (^blockGraphicsLayerDraw)(CGContextRef _Nonnull ctx, id _Nullable u
 
 @interface PYGraphicsThumb : NSObject
 +(nonnull instancetype) graphicsThumbWithView:(nonnull UIView*) view block:(nullable blockGraphicsLayerDraw) block;
--(void) executDisplay:(nullable id) userInfo;
+-(nonnull CALayer *) executDisplay:(nullable id) userInfo;
 @end

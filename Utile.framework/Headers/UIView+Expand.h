@@ -42,5 +42,5 @@
 +(instancetype _Nullable) loadXib;
 -(UIImage * _Nullable) drawView;
 -(UIImage * _Nullable) drawViewWithBounds:(CGRect) bounds;
-
+-(UIImage * _Nullable) drawViewWithBounds:(CGRect) bounds scale:(CGFloat) scale;
 @end

@@ -20,21 +20,21 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     NSString *ip = @"http://192.168.1.77";
     
-    PYHttpRequest *request = [PYHttpRequest new];
-    NSString * GlHttpBaseUrlCommon = @"http://123.57.42.26:38081/api/common/v1";
-    request.url = [NSString stringWithFormat:@"%@?type=%@&cp_id=1001",GlHttpBaseUrlCommon, @"weather"];
-    [request setHeadRequest:@{@"Content-Type":@"x-www-form-urlencoded;charset=UTF-8"}];
-    
-    [request requestWithType:PYRequestGet params:@{@"width":@(400),@"height":@(800),@"area":@"asdfa"} blockComplete:^(NSInteger status, id  _Nullable data, id<PYHttpRequest>  _Nonnull target) {
-        
-        if (status == 0 || [data isKindOfClass:[NSError class]]) {
-            return;
-        }
-        
-        NSDictionary * dict = [data toDictionary];
-        NSLog(@"");
-        
-    }];
+//    PYHttpRequest *request = [PYHttpRequest new];
+//    NSString * GlHttpBaseUrlCommon = @"http://123.57.42.26:38081/api/common/v1";
+//    request.url = [NSString stringWithFormat:@"%@?type=%@&cp_id=1001",GlHttpBaseUrlCommon, @"weather"];
+//    [request setHeadRequest:@{@"Content-Type":@"x-www-form-urlencoded;charset=UTF-8"}];
+//    
+//    [request requestWithType:PYRequestGet params:@{@"width":@(400),@"height":@(800),@"area":@"asdfa"} blockComplete:^(NSInteger status, id  _Nullable data, id<PYHttpRequest>  _Nonnull target) {
+//        
+//        if (status == 0 || [data isKindOfClass:[NSError class]]) {
+//            return;
+//        }
+//        
+//        NSDictionary * dict = [data toDictionary];
+//        NSLog(@"");
+//    
+//    }];
 //    [request setBlockSuccess:^(NSInteger status, id  _Nullable data, id<PYHttpRequest>  _Nonnull target) {
 //        NSLog(@"");
 //    }];

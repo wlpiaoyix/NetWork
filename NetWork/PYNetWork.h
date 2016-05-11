@@ -48,23 +48,26 @@ typedef void (^BlockHttpRequest)(NSInteger status, id _Nullable data, id<PYHttpR
 
 @protocol PYHttpTask;
 
+static NSString * _Nonnull  STATIC_DOWNLOAD_CACHE;
+static NSTimeInterval   STATIC_OUT_TIME;
 //http请求反馈
 typedef void (^BlockHttpTask)(id _Nullable data, id<PYHttpTask> _Nonnull target);
 @protocol PYHttpTask <NSObject>
 @required
-@property (nonatomic, strong) NSString * _Nullable identifier;
-@property (nonatomic, strong) id _Nullable userInfo;
+@property (nonatomic) NSTimeInterval outTime;
+@property (nonatomic, strong, nullable) NSString * identifier;
+@property (nonatomic, strong, nullable) id userInfo;
 //下载地址
-@property (nonatomic, strong) NSString * _Nullable stringUrl;
-@property (nonatomic, strong) NSData * _Nullable dataResume;
-@property (nonatomic, readonly) NSURLSessionTask * _Nonnull task;
+@property (nonatomic, strong, nullable) NSString * stringUrl;
+@property (nonatomic, strong, nullable) NSData * dataResume;
+@property (nonatomic, readonly, nonnull) NSURLSessionTask * task;
 /**
  请求反馈
  */
 //==>
 -(instancetype _Nonnull) setBlockSuccess:(BlockHttpTask _Nullable) blockSuccess;
 -(instancetype _Nonnull) setBlockFaild:(BlockHttpTask _Nullable) blockFaild;
--(instancetype _Nonnull) setBlockProgress:(void (^_Nullable) (int64_t currentBytes, int64_t totalBytes)) blockProgress;
+-(instancetype _Nonnull) setBlockProgress:(void (^_Nullable) (id<PYHttpTask> _Nonnull target,int64_t currentBytes, int64_t totalBytes)) blockProgress;
 //下载请求恢复数取消
 -(instancetype _Nonnull) setBlockCancel:(BlockHttpTask _Nullable) blockCancel;
 //<==

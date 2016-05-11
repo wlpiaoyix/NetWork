@@ -8,11 +8,12 @@
 
 #import "PYNetWork.h"
 @interface PYHttpDownloadTask : NSObject<PYHttpTask>
-@property (nonatomic, strong) NSString * _Nullable identifier;
-@property (nonatomic, strong) id _Nullable userInfo;
+@property (nonatomic) NSTimeInterval outTime;
+@property (nonatomic, strong, nullable) NSString * identifier;
+@property (nonatomic, strong, nullable) id userInfo;
 //下载地址
-@property (nonatomic, strong) NSString * _Nullable stringUrl;
-@property (nonatomic, strong) NSData * _Nullable dataResume;
-@property (nonatomic, readonly) NSURLSessionTask * _Nonnull task;
+@property (nonatomic, strong, nullable) NSString * stringUrl;
+@property (nonatomic, strong, nullable) NSData * dataResume;
+@property (nonatomic, readonly, nonnull) NSURLSessionTask * task;
 
 @end

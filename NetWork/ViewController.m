@@ -17,12 +17,17 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    [self download];
     // Do any additional setup after loading the view, typically from a nib.
 }
 
 -(void) download{
     PYHttpDownloadTask *download = [PYHttpDownloadTask new];
-    download.stringUrl = @"http://192.168.1.77:8080/test/ad.wlpiaoyi?a=1";
+    download.stringUrl = @"http://127.0.0.1:8080/WlServlet/ad.wlpiaoyi?a=1";
+    download.identifier = @"adfadsfadsfaddkk";
+    [download setBlockProgress:^(id<PYHttpTask> target, int64_t currentBytes, int64_t totalBytes) {
+        NSLog(@"%f",(CGFloat)currentBytes / (CGFloat)totalBytes);
+    }];
     [download setBlockCancel:^(id  _Nullable data, id<PYHttpTask>  _Nonnull target) {
         NSLog(@"");
     }];

@@ -9,19 +9,27 @@
 #import "PYHttpDownloadTask.h"
 #import <Utile/PYUtile.h>
 #import <Utile/EXTScope.h>
+#import <Utile/NSString+Expand.h>
+#import <Utile/PYReachabilityListener.h>
+
+
+static NSString *  STATIC_DOWNLOAD_CACHE  = @"org.personal.wlpiaoyi.network.downloadcache";
+static NSTimeInterval   STATIC_OUT_TIME = 30;
 
 @interface PYHttpDownloadTask()<NSURLSessionDelegate>
+@property (nonatomic, assign, nullable) NSURLSession * session;
+@property (nonatomic) BOOL flagBeginDownload;
 @property (nonatomic, copy) BlockHttpTask _Nullable _blockSuccess_;
 @property (nonatomic, copy) BlockHttpTask _Nullable _blockFaild_;
 @property (nonatomic, copy) BlockHttpTask _Nullable _blockCancel_;
-@property (nonatomic, copy) void (^_Nullable _blockProgress_) (int64_t currentBytes, int64_t totalBytes);
+@property (nonatomic, copy) void (^_Nullable _blockProgress_) (id<PYHttpTask> _Nonnull target, int64_t currentBytes, int64_t totalBytes);
 @end
 
 @implementation PYHttpDownloadTask
 
 -(instancetype) init{
     if (self = [super init]) {
-        
+        self.outTime = STATIC_OUT_TIME;
     }
     return self;
 }
@@ -39,7 +47,7 @@
     return self;
 }
 
--(instancetype _Nonnull) setBlockProgress:(void (^_Nullable) (int64_t currentBytes, int64_t totalBytes)) blockProgress{
+-(instancetype _Nonnull) setBlockProgress:(void (^_Nullable) (id<PYHttpTask> _Nonnull target,int64_t currentBytes, int64_t totalBytes)) blockProgress;{
     self._blockProgress_ = blockProgress;
     return self;
 }
@@ -55,7 +63,9 @@
             if (!self.dataResume && !self.stringUrl) {
                 return false;
             }
-            
+            if (![NSString isEnabled:self.identifier]) {
+                self.identifier = PYUUID(64);
+            }
             NSURLSession *session = [PYHttpDownloadTask createSessionWithIdentifier:self.identifier delegate:self];
             if (!session) { return false;}
             
@@ -66,6 +76,7 @@
         }
     }
     [_task resume];
+    self.flagBeginDownload = false;
     return true;
 }
 -(BOOL) suspend{
@@ -97,8 +108,9 @@
 #pragma mark - NSURLSessionDownloadDelegate
 //这个方法用来跟踪下载数据并且根据进度刷新ProgressView
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didWriteData:(int64_t)bytesWritten totalBytesWritten:(int64_t)totalBytesWritten totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite{
+    self.flagBeginDownload = true;
     if (self._blockProgress_) {
-        self._blockProgress_(totalBytesWritten , totalBytesExpectedToWrite);
+        self._blockProgress_(self, totalBytesWritten, totalBytesExpectedToWrite);
     }
 }
 
@@ -123,11 +135,53 @@
         }
     }
 }
+
 #pragma mark - NSURLSessionDelegate ==>
-- (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session {
+- (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(nullable NSError *)error{
+}
+- (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
+ completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * __nullable credential))completionHandler{
+}
+- (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session NS_AVAILABLE_IOS(7_0){
 }
 #pragma NSURLSessionDelegate <==
 
+-(void) setFlagBeginDownload:(BOOL)flagBeginDownload{
+    _flagBeginDownload = flagBeginDownload;
+    if (_flagBeginDownload) {
+        return;
+    }
+    @unsafeify(self);
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        @strongify(self);
+        NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
+        // 耗时的操作
+        while (!self.flagBeginDownload) {
+            if ([PYReachabilityListener instanceSingle].status == kNotReachable) {
+                break;
+            }
+            if ([NSDate timeIntervalSinceReferenceDate] > currentTime + self.outTime) {
+                break;
+            }
+            [NSThread sleepForTimeInterval:.5];
+        }
+        if (self.flagBeginDownload) {
+            return;
+        }
+        
+        @unsafeify(self);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            @strongify(self);
+            // 更新界面
+            if (!self.flagBeginDownload) {
+                if (!self.task) {
+                    return;
+                }
+                [(NSURLSessionDownloadTask*)self.task cancel];
+            }
+        });
+    });
+}
 
 +(NSURLSessionDownloadTask*) createDownloadTask:(NSURLSession*)session
                                  downLoadString:(NSString*) downLoadstr
@@ -140,7 +194,7 @@
     }
 }
 
-+(NSURLSession*) createSessionWithIdentifier:(NSString *) identifier delegate:(nullable id <NSURLSessionDelegate>) delegate{
++(NSURLSession*) createSessionWithIdentifier:(nonnull NSString *) identifier delegate:(nullable id <NSURLSessionDelegate>) delegate{
     //这个sessionConfiguration 很重要， com.zyprosoft.xxx  这里，这个com.company.这个一定要和 bundle identifier 里面的一致，否则ApplicationDelegate 不会调用handleEventsForBackgroundURLSession代理方法
     NSURLSessionConfiguration *configuration;
     if (IOS8_OR_LATER) {
@@ -148,7 +202,7 @@
     }else{
         configuration = [NSURLSessionConfiguration backgroundSessionConfiguration:identifier];
     }
-    configuration.URLCache =   [[NSURLCache alloc] initWithMemoryCapacity:20 * 1024*1024 diskCapacity:100 * 1024*1024 diskPath:@"downloadcache"];
+    configuration.URLCache =   [[NSURLCache alloc] initWithMemoryCapacity:20 * 1024*1024 diskCapacity:100 * 1024*1024 diskPath:STATIC_DOWNLOAD_CACHE];
     configuration.requestCachePolicy = NSURLRequestUseProtocolCachePolicy;
     return [NSURLSession sessionWithConfiguration:configuration delegate:delegate delegateQueue:nil];
 }
